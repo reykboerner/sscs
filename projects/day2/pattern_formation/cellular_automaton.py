@@ -63,7 +63,7 @@ class CellularAutomaton:
         id = y * self.par.N + x
         return id
 
-    def simulate(self, timesteps, live_plot=True, plot_interval=1):
+    def simulate(self, timesteps, live_plot=True, plot_interval=1, dpi=150):
         """
         Runs a simulation of the cellular automaton for the number of steps specifed by
         `timesteps`.
@@ -72,6 +72,7 @@ class CellularAutomaton:
         -----------------
         - live_plot=True: if True, plot the results during the simulation
         - plot_interval=1: number of time steps between plotting instances
+        - dpi=150: dots per inch (resolution) of plot
 
         Returns the simulation results as a numpy array of shape (T, N, M), where T is
         the number of time steps and (N, M) is the grid size.
@@ -136,14 +137,7 @@ class CellularAutomaton:
 
         # Initialisation of plot
         if live_plot:
-            plt.ion()
-            fig_domain, ax_domain = plt.subplots(1,1,figsize=(5,5),dpi=200)
-            plot_domain = ax_domain.imshow(A0.transpose(),
-                interpolation = 'nearest', origin = 'lower',
-                extent = (0,self.par.M,0,self.par.N),
-                vmin = 0, vmax = 1, cmap = 'Greys', animated = True)
-            ax_domain.set(xlabel="x", ylabel="y")
-            ax_domain.set_title('Time step: 0')
+            _fig, _ax, _data = self.initialize_plot(A0, dpi=dpi)
 
         # Actual simulation
         A = np.zeros((timesteps+1, self.par.N, self.par.M))
@@ -159,9 +153,25 @@ class CellularAutomaton:
             
             # Update plotting
             if live_plot and (t%plot_interval == 0):
-                plot_domain.set_data(A[t+1].transpose())
-                ax_domain.set_title('Time step: {:3.0f}'.format(t+1))
-                clear_output(wait=True)
-                display(fig_domain)
+                self.update_plot(_fig, _ax, _data, A[t+1], t+1)
             
         return A
+
+    def initialize_plot(self, A0, dpi=150):
+        """Initializes the plot of the CA domain"""
+        plt.ion()
+        fig_domain, ax_domain = plt.subplots(1, 1, figsize=(5,5), dpi=dpi)
+        plot_domain = ax_domain.imshow(A0.transpose(),
+            interpolation = 'nearest', origin = 'lower',
+            extent = (0,self.par.M,0,self.par.N),
+            vmin = 0, vmax = 1, cmap = 'Greys', animated = True)
+        ax_domain.set(xlabel="x", ylabel="y")
+        ax_domain.set_title('Time step: 0')
+        return fig_domain, ax_domain, plot_domain
+
+    def update_plot(self, fig, ax, data, state, time):
+        """Updates the plot with the current state of the CA"""
+        data.set_data(state.transpose())
+        ax.set_title('Time step: {:3.0f}'.format(time))
+        clear_output(wait=True)
+        display(fig)
