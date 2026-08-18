@@ -79,7 +79,7 @@ class CellularAutomaton:
         Active (passive) sites have value 1 (0).
         """
         # Initialisation of the grid
-        A0 = (np.random.rand(self.par.N, self.par.M) < self.par.p)
+        A0 = (np.random.rand(self.par.N, self.par.M) <= self.par.p)
         A0 = A0.astype(int)
         
         # Pre-calculation of the neighbours within certain radius
